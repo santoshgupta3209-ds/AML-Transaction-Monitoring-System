@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>Transaction Monitor</title><link rel="stylesheet" href="style.css"></head>
-<body><nav class="navbar"><div class="brand"><span>Finova Bank of India</span></div><div><a href="admin-dashboard.html">Dashboard</a><a href="alerts.html">Alerts</a><a href="#" onclick="logout()">Logout</a></div></nav>
+<body><nav class="navbar"><div class="brand"><span>Finova Bank </span></div><div><a href="admin-dashboard.html">Dashboard</a><a href="alerts.html">Alerts</a><a href="#" onclick="logout()">Logout</a></div></nav>
 <main class="container"><h1>All Transactions</h1><p>Read-only transaction monitoring for administrators.</p><div class="table-wrap"><table class="wide-table"><thead><tr><th>ID</th><th>Debit Customer</th><th>Debit Account</th><th>Amount</th><th>Credit Customer</th><th>Credit Account</th><th>Type</th><th>Channel</th><th>Location</th><th>Risk Score</th><th>Risk Level</th><th>Status</th><th>Date & Time</th></tr></thead><tbody id="rows"></tbody></table></div><p id="message" class="message"></p></main>
 <script>
 if(localStorage.getItem("role") !== "ADMIN"){window.location.href="login.html"}

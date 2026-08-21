@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>AML Alerts</title><link rel="stylesheet" href="style.css"></head>
-<body><nav class="navbar"><div class="brand"><span>Finova Bank of India</span></div><a href="admin-dashboard.html">Dashboard</a></nav>
+<body><nav class="navbar"><div class="brand"><span>Finova Bank </span></div><a href="admin-dashboard.html">Dashboard</a></nav>
 <main class="container"><h1>Suspicious Activity Alerts</h1><div class="table-wrap"><table class="wide-table"><thead><tr><th>ID</th><th>Transaction</th><th>Debit Customer</th><th>Debit Account</th><th>Credit Customer</th><th>Credit Account</th><th>Risk Score</th><th>Risk Level</th><th>Type</th><th>Status</th><th>Action</th><th>Created</th></tr></thead><tbody id="rows"></tbody></table></div><section id="alertDetails" class="card hidden"></section><p id="message" class="message"></p></main>
 <script>
 function formatDateTime(value){if(!value)return "-";const date=new Date(value);if(Number.isNaN(date.getTime()))return "-";return new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true}).format(date)}
