@@ -1,0 +1,49 @@
+# ==============================
+# FastAPI Backend
+# ==============================
+fastapi
+uvicorn[standard]
+
+# ==============================
+# Database
+# ==============================
+sqlalchemy
+pymysql
+
+# ==============================
+# Authentication & Security
+# ==============================
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+python-multipart
+
+# ==============================
+# Environment Variables
+# ==============================
+python-dotenv
+
+# ==============================
+# Data Science
+# ==============================
+pandas
+numpy
+scikit-learn
+
+# ==============================
+# Machine Learning
+# ==============================
+xgboost
+joblib
+
+# ==============================
+# Validation
+# ==============================
+pydantic
+pydantic-settings
+
+# ==============================
+# Testing
+# ==============================
+pytest
+httpx

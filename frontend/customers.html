@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Customers</title><link rel="stylesheet" href="style.css"></head>
+<body><nav class="navbar"><div class="brand"><span>Finova Bank of India</span></div><a href="admin-dashboard.html">Dashboard</a></nav>
+<main class="container"><h1>Customers</h1>
+<div class="tab-bar">
+  <button id="tabList" class="tab-button active">Customer List</button>
+  <button id="tabCreate" class="tab-button">Create Customer</button>
+</div>
+<div id="createPanel" class="tab-panel hidden">
+  <div class="auth-card">
+    <h2>Create New Customer</h2>
+    <form id="customerForm" class="form-grid">
+      <input id="username" placeholder="Username" required />
+      <input id="email" type="email" placeholder="Email" required />
+      <input id="password" type="password" placeholder="Password" required />
+      <input id="full_name" placeholder="Full Name" required />
+      <input id="phone" placeholder="Phone" />
+      <input id="address" placeholder="Address" />
+      <input id="account_number" placeholder="Account Number" required />
+      <select id="account_type">
+        <option value="SAVINGS">SAVINGS</option>
+        <option value="CURRENT">CURRENT</option>
+      </select>
+      <input id="balance" type="number" min="0" step="0.01" placeholder="Initial Balance" value="0" />
+      <select id="status">
+        <option value="ACTIVE">ACTIVE</option>
+        <option value="INACTIVE">INACTIVE</option>
+      </select>
+      <button id="formButton" class="btn" type="submit">Create Customer</button>
+      <button id="cancelEdit" class="btn" type="button" style="display:none; background:#71717a;">Cancel</button>
+    </form>
+    <p id="formMessage" class="message"></p>
+  </div>
+</div>
+<div id="listPanel" class="tab-panel">
+  <div class="button-row"><button id="newCustomerBtn" class="btn">Create New Customer</button></div>
+  <div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Status</th><th>Account</th><th>Created</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table></div>
+</div>
+<p id="message" class="message"></p></main>
+<script>
+const tabList = document.getElementById("tabList");
+const tabCreate = document.getElementById("tabCreate");
+const createPanel = document.getElementById("createPanel");
+const listPanel = document.getElementById("listPanel");
+const formMessage = document.getElementById("formMessage");
+const rows = document.getElementById("rows");
+const message = document.getElementById("message");
+const customerForm = document.getElementById("customerForm");
+const username = document.getElementById("username");
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const full_name = document.getElementById("full_name");
+const phone = document.getElementById("phone");
+const address = document.getElementById("address");
+const account_number = document.getElementById("account_number");
+const account_type = document.getElementById("account_type");
+const balance = document.getElementById("balance");
+const status = document.getElementById("status");
+const formButton = document.getElementById("formButton");
+const cancelEdit = document.getElementById("cancelEdit");
+let editCustomerId = null;
+
+function getErrorText(err) {
+  if (!err) return "Unknown error";
+  if (typeof err === "string") return err;
+  if (typeof err.message === "string") return err.message;
+  if (typeof err.detail === "string") return err.detail;
+  if (typeof err.detail === "object" && err.detail !== null) {
+    try {
+      return JSON.stringify(err.detail);
+    } catch {
+      return String(err.detail);
+    }
+  }
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
+function showPanel(panelId) {
+  const panels = [createPanel, listPanel];
+  panels.forEach(panel => panel.classList.add("hidden"));
+  document.getElementById(panelId).classList.remove("hidden");
+}
+
+function setActiveTab(activeButton) {
+  [tabList, tabCreate].forEach(btn => {
+    btn.classList.remove("active");
+  });
+  activeButton.classList.add("active");
+}
+
+function formatDateTime(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  }).format(date);
+}
+
+async function loadCustomers() {
+  try {
+    const r = await fetch("/admin/customers");
+    const d = await r.json();
+    if (!r.ok) throw Error(d.detail || "Unable to load");
+    rows.innerHTML = d.map(c => `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.full_name}</td>
+        <td>${c.phone || "-"}</td>
+        <td>${c.status}</td>
+        <td>${(c.accounts || []).map(account => `
+          <div>${account.account_number} (${account.status})</div>
+          ${account.status === "DELETED" ? "" : `<button class="small-btn ${account.status === "FROZEN" ? "" : "danger"}" onclick="toggleAccount(${account.id}, '${account.status}')">
+            ${account.status === "FROZEN" ? "Unfreeze" : "Freeze"}
+          </button>
+          <button class="small-btn danger" onclick="deleteAccount(${account.id})">Delete Account</button>`}
+        `).join("") || "-"}</td>
+        <td>${formatDateTime(c.created_at)}</td>
+        <td>
+          <button class="small-btn" onclick="editCustomer(${c.id})">Edit</button>
+          <button class="small-btn danger" onclick="deleteCustomer(${c.id})">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    message.textContent = e.message;
+  }
+}
+
+function setFormMode(mode, customer = null) {
+  if (mode === "edit") {
+    formButton.textContent = "Update Customer";
+    cancelEdit.style.display = "inline-block";
+    username.disabled = true;
+    email.disabled = true;
+    password.required = false;
+
+    if (customer) {
+      editCustomerId = customer.id;
+      username.value = customer.username;
+      email.value = customer.email;
+      password.value = "";
+      full_name.value = customer.full_name;
+      phone.value = customer.phone || "";
+      address.value = customer.address || "";
+      account_number.value = customer.account_number || "";
+      account_type.value = customer.account_type || "SAVINGS";
+      balance.value = customer.balance || 0;
+      status.value = customer.status || "ACTIVE";
+    }
+  } else {
+    formButton.textContent = "Create Customer";
+    cancelEdit.style.display = "none";
+    username.disabled = false;
+    email.disabled = false;
+    password.required = true;
+    editCustomerId = null;
+    customerForm.reset();
+    status.value = "ACTIVE";
+  }
+}
+
+async function createCustomer(event) {
+  event.preventDefault();
+  formMessage.textContent = "";
+  const payload = {
+    username: username.value.trim(),
+    email: email.value.trim(),
+    full_name: full_name.value.trim(),
+    phone: phone.value.trim() || null,
+    address: address.value.trim() || null,
+    account_number: account_number.value.trim(),
+    account_type: account_type.value,
+    balance: parseFloat(balance.value) || 0,
+    status: status.value
+  };
+
+  if (password.value.trim().length > 0) {
+    payload.password = password.value;
+  }
+
+  try {
+    const method = editCustomerId ? "PUT" : "POST";
+    const url = editCustomerId ? `/admin/customers/${editCustomerId}` : "/admin/customers";
+
+    const response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw Error(getErrorText(data));
+    }
+
+    formMessage.style.color = "#16a34a";
+    formMessage.textContent = editCustomerId ? "Customer updated successfully." : "Customer created successfully.";
+    setFormMode("create");
+    await loadCustomers();
+    showPanel("listPanel");
+    setActiveTab(tabList);
+  } catch (err) {
+    formMessage.style.color = "#b42318";
+    formMessage.textContent = getErrorText(err);
+  }
+}
+
+async function deleteCustomer(customerId) {
+  try {
+    const response = await fetch(`/admin/customers/${customerId}`, {
+      method: "DELETE"
+    });
+    const data = await response.json();
+    if (!response.ok) throw Error(data.detail || "Unable to delete customer");
+    message.textContent = "Customer deleted successfully.";
+    await loadCustomers();
+  } catch (err) {
+    message.textContent = getErrorText(err);
+  }
+}
+
+async function toggleAccount(accountId, currentStatus) {
+  const action = currentStatus === "FROZEN" ? "unfreeze" : "freeze";
+  try {
+    const response = await fetch(`/admin/accounts/${accountId}/${action}`, {
+      method: "PUT"
+    });
+    const data = await response.json();
+    if (!response.ok) throw Error(getErrorText(data));
+    message.textContent = data.message;
+    await loadCustomers();
+  } catch (err) {
+    message.textContent = getErrorText(err);
+  }
+}
+
+async function deleteAccount(accountId) {
+  if (!confirm("Delete this account? The customer profile will be kept.")) return;
+  try {
+    const response = await fetch(`/admin/accounts/${accountId}`, {
+      method: "DELETE"
+    });
+    const raw = await response.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = { detail: raw || "Unable to delete account" };
+    }
+    if (!response.ok) throw Error(getErrorText(data));
+    message.textContent = data.message || "Account deleted. Customer details were kept.";
+    await loadCustomers();
+  } catch (err) {
+    message.textContent = getErrorText(err);
+  }
+}
+
+document.getElementById("newCustomerBtn").addEventListener("click", () => {
+  setFormMode("create");
+  showPanel("createPanel");
+  setActiveTab(tabCreate);
+});
+
+async function editCustomer(customerId) {
+  try {
+    const response = await fetch(`/admin/customers/${customerId}`);
+    const data = await response.json();
+    if (!response.ok) throw Error(data.detail || "Unable to load customer");
+
+    const customer = data.customer || data;
+    setFormMode("edit", {
+      ...customer,
+      account_number: customer.accounts?.[0]?.account_number || "",
+      account_type: customer.accounts?.[0]?.account_type || "SAVINGS",
+      balance: customer.accounts?.[0]?.balance || 0,
+      status: customer.status || "ACTIVE"
+    });
+    showPanel("createPanel");
+    setActiveTab(tabCreate);
+  } catch (err) {
+    message.textContent = getErrorText(err);
+  }
+}
+
+tabList.addEventListener("click", () => {
+  showPanel("listPanel");
+  setActiveTab(tabList);
+});
+
+tabCreate.addEventListener("click", () => {
+  showPanel("createPanel");
+  setActiveTab(tabCreate);
+});
+
+customerForm.addEventListener("submit", createCustomer);
+loadCustomers();
+</script></body></html>

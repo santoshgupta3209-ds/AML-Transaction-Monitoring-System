@@ -1,0 +1,94 @@
+{
+    "best_model": "XGBoost",
+    "selection_metric": "F1 Score",
+    "dataset": "C:\\Users\\Aashish\\OneDrive\\Documents\\Semester 5 Pratical\\aml_project\\dataset\\aml_transactions.csv",
+    "training_samples": 8000,
+    "testing_samples": 2000,
+    "features": [
+        "amount",
+        "transaction_hour",
+        "transaction_frequency",
+        "average_transaction_amount",
+        "account_age_days",
+        "previous_transaction_count",
+        "previous_suspicious_count",
+        "receiver_count",
+        "international_transaction",
+        "cash_transaction",
+        "balance_before",
+        "balance_after",
+        "transaction_type",
+        "transaction_channel",
+        "transaction_location"
+    ],
+    "models": {
+        "Logistic Regression": {
+            "accuracy": 0.884,
+            "precision": 0.179211,
+            "recall": 0.943396,
+            "f1_score": 0.301205,
+            "roc_auc": 0.954957,
+            "confusion_matrix": [
+                [
+                    1718,
+                    229
+                ],
+                [
+                    3,
+                    50
+                ]
+            ]
+        },
+        "Decision Tree": {
+            "accuracy": 0.9355,
+            "precision": 0.172414,
+            "recall": 0.377358,
+            "f1_score": 0.236686,
+            "roc_auc": 0.668217,
+            "confusion_matrix": [
+                [
+                    1851,
+                    96
+                ],
+                [
+                    33,
+                    20
+                ]
+            ]
+        },
+        "Random Forest": {
+            "accuracy": 0.9765,
+            "precision": 0.615385,
+            "recall": 0.301887,
+            "f1_score": 0.405063,
+            "roc_auc": 0.960859,
+            "confusion_matrix": [
+                [
+                    1937,
+                    10
+                ],
+                [
+                    37,
+                    16
+                ]
+            ]
+        },
+        "XGBoost": {
+            "accuracy": 0.9785,
+            "precision": 0.708333,
+            "recall": 0.320755,
+            "f1_score": 0.441558,
+            "roc_auc": 0.962458,
+            "confusion_matrix": [
+                [
+                    1940,
+                    7
+                ],
+                [
+                    36,
+                    17
+                ]
+            ]
+        }
+    }
+}

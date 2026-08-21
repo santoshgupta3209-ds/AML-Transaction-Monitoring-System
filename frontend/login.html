@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Login - Finova Bank of India</title><link rel="stylesheet" href="style.css"></head>
+<body class="login-page">
+<main class="login-stage"><section class="login-visual"><div class="visual-copy"><div class="login-visual-brand"><img src="logo.png" alt="Finova Bank logo"><span>Finova Bank of India</span></div><h1>Secure access,<br><em>quietly assured.</em></h1><p>One protected place for every account, transfer, and decision.</p></div><div class="security-cube" aria-hidden="true"><div class="cube-face cube-front"></div><div class="cube-face cube-side"></div><div class="cube-face cube-top"></div><div class="cube-ring"></div></div></section><section class="auth-card"><div class="brand login-brand"><img src="logo.png" alt="Finova Bank logo"><span>Finova Bank of India</span></div><h2>Welcome back</h2><p class="login-subtitle">Sign in to continue to your secure workspace.</p>
+<form id="loginForm"><label>Username</label><input id="username" required>
+<label>Password</label><input id="password" type="password" required>
+<button class="btn" type="submit">Login</button></form>
+<p id="message" class="message login-message" role="alert"></p>
+<p class="register-line">New customer? <a href="#" id="registerLink">Register</a></p></section></main>
+<script>
+const API = window.location.origin;
+const loginForm = document.getElementById("loginForm");
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
+const messageEl = document.getElementById("message");
+const registerLink = document.getElementById("registerLink");
+
+loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    messageEl.textContent = "";
+
+    const formData = new URLSearchParams();
+    formData.append("username", usernameInput.value.trim());
+    formData.append("password", passwordInput.value);
+
+    try {
+        const response = await fetch(`${API}/auth/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            const error = new Error(data.detail || "Login failed");
+            error.status = response.status;
+            throw error;
+        }
+
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("user_id", data.user_id);
+        localStorage.setItem("username", data.username);
+        localStorage.setItem("role", data.role);
+
+        if (data.role === "ADMIN") {
+            window.location.href = "admin-dashboard.html";
+        } else {
+            window.location.href = "customer-dashboard.html";
+        }
+    } catch (err) {
+        messageEl.textContent = err.message || "Login failed";
+        messageEl.classList.toggle("login-inactive", err.status === 403);
+        loginForm.classList.toggle("login-blocked", err.status === 403);
+    }
+});
+
+registerLink.addEventListener("click", async (e) => {
+    e.preventDefault();
+    messageEl.textContent = "";
+
+    const username = prompt("Username:");
+    const email = prompt("Email:");
+    const password = prompt("Password:");
+
+    if (!username || !email || !password) {
+        messageEl.textContent = "Registration cancelled.";
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API}/auth/register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username,
+                email,
+                password,
+                role: "CUSTOMER"
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Registration failed");
+        }
+
+        alert("Registration successful. Please login.");
+    } catch (err) {
+        messageEl.textContent = err.message || "Registration failed";
+    }
+});
+</script></body></html>
