@@ -53,15 +53,28 @@ def startup_event():
     init_db()
     db = SessionLocal()
     try:
+        new_admin_username = "admin"
+        legacy_admin_username = "adminFinova_santoshgupta1#12"
+
         admin_user = (
             db.query(User)
-            .filter(User.username == "santosh7102005")
+            .filter(User.username == new_admin_username)
+            .first()
+        )
+        legacy_admin_user = (
+            db.query(User)
+            .filter(User.username == legacy_admin_username)
             .first()
         )
 
-        if not admin_user:
+        if legacy_admin_user and not admin_user:
+            legacy_admin_user.username = new_admin_username
+            db.commit()
+            return
+
+        if not admin_user and not legacy_admin_user:
             new_admin = User(
-                username="santosh7102005",
+                username=new_admin_username,
                 email="admin@example.com",
                 password_hash=hash_password("TDDS023A"),
                 role="ADMIN"
